@@ -31,10 +31,8 @@ const Ad = sequelize.define('Ad', {
     },
     imageUrl: {
         type: DataTypes.STRING,
-        allowNull: true,
-        validate: {
-            isUrl: true
-        }
+        allowNull: true
+        // Removed isUrl validation to allow relative paths (/uploads/..., /images/...)
     },
     // Foreign key will be added in associations
 });
