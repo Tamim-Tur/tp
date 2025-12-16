@@ -21,5 +21,12 @@ const adSchema = z.object({
 module.exports = {
     registerSchema,
     loginSchema,
-    adSchema
+    adSchema,
+    paymentSchema: z.object({
+        adId: z.string().uuid(),
+        cardNumber: z.string().regex(/^\d{16}$/, "Invalid card number format (must be 16 digits)"),
+        expiryDate: z.string().regex(/^(0[1-9]|1[0-2])\/([0-9]{2})$/, "Invalid expiry date (MM/YY)"),
+        cvv: z.string().regex(/^\d{3,4}$/, "Invalid CVV"),
+        cardHolderName: z.string().min(2)
+    })
 };

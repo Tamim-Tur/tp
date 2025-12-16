@@ -25,6 +25,10 @@ const Ad = sequelize.define('Ad', {
             min: 0
         }
     },
+    status: {
+        type: DataTypes.ENUM('available', 'sold'),
+        defaultValue: 'available'
+    },
     imageUrl: {
         type: DataTypes.STRING,
         allowNull: true,

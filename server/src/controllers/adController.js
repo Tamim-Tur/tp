@@ -5,6 +5,11 @@ exports.createAd = async (req, res) => {
     try {
         const validatedData = adSchema.parse(req.body);
 
+        // Fix: Convert empty string imageUrl to null to avoid Sequelize validation error
+        if (validatedData.imageUrl === '') {
+            validatedData.imageUrl = null;
+        }
+
         const ad = await Ad.create({
             ...validatedData,
             userId: req.user.userId
@@ -15,6 +20,7 @@ exports.createAd = async (req, res) => {
         if (error.issues) {
             return res.status(400).json({ errors: error.issues });
         }
+        console.error('Error creating ad:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
@@ -22,11 +28,13 @@ exports.createAd = async (req, res) => {
 exports.getAllAds = async (req, res) => {
     try {
         const ads = await Ad.findAll({
+            where: { status: 'available' },
             include: [{ model: User, as: 'seller', attributes: ['username'] }]
         });
         res.json(ads);
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        console.error('Error in getAllAds:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
 

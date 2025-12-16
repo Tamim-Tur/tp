@@ -18,7 +18,7 @@ connectMongo();
 setupSecurity(app); // Helmet, CORS, Rate Limit
 app.use(express.json());
 app.use(cookieParser());
-app.use(morgan('dev'));
+// app.use(morgan('dev'));
 
 // Simple Audit Middleware (logs to Mongo if available)
 app.use(async (req, res, next) => {
@@ -42,9 +42,10 @@ app.use(async (req, res, next) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/ads', adRoutes);
+app.use('/api/transactions', require('./routes/transactionRoutes'));
 
 // Database sync
-sequelize.sync({ force: false }).then(() => {
+sequelize.sync({ alter: true }).then(() => {
     console.log('Database synced');
 });
 

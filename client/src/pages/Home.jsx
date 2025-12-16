@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { Tag } from 'lucide-react';
@@ -50,9 +51,19 @@ export default function Home() {
                                 <p style={{ color: 'var(--text-muted)', flex: 1, marginBottom: '1.5rem' }}>
                                     {ad.description.substring(0, 100)}...
                                 </p>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-                                    <Tag size={16} />
-                                    <span>Vendu par {ad.seller?.username || 'Anonyme'}</span>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                                        <Tag size={16} />
+                                        <span>{ad.seller?.username || 'Anonyme'}</span>
+                                    </div>
+                                    <Link
+                                        to={`/payment/${ad.uuid}`}
+                                        state={{ ad }}
+                                        className="btn btn-primary"
+                                        style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+                                    >
+                                        Acheter
+                                    </Link>
                                 </div>
                             </div>
                         </motion.div>
