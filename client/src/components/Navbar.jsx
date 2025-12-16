@@ -6,13 +6,17 @@ export default function Navbar() {
     const { user, logout } = useAuth();
 
     return (
-        <nav className="glass-panel" style={{
+        <nav className="glass-panel no-hover" style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             padding: '1rem 2rem',
             marginBottom: '2rem',
-            marginTop: '1rem'
+            marginTop: '0',
+            position: 'sticky',
+            top: '0',
+            borderRadius: '0 0 1rem 1rem',
+            zIndex: 50
         }}>
             <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent)' }}>
                 <ShoppingBag />
