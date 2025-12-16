@@ -1,25 +1,39 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 :root {
-  --primary: #646cff;
-  --bg-dark: #0f172a;
-  --bg-card: rgba(30, 41, 59, 0.7);
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --accent: #38bdf8;
-  --danger: #ef4444;
-  --success: #22c55e;
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --primary: #000000;
+  /* Black */
+  --primary-hover: #333333;
+  --bg-dark: #FFFFFF;
+  /* White Background */
+  --bg-card: #F5F5F7;
+  /* Very Light Gray Cards */
+  --text-main: #000000;
+  /* Black Text */
+  --text-inverse: #FFFFFF;
+  --text-muted: #666666;
+  /* Gray Text */
+  --accent: #000000;
+  /* Black Accent */
+  --danger: #FF0000;
+  /* Red */
+  --success: #000000;
+  /* Replaces Green with Black */
+  --glass-border: #E0E0E0;
+  /* Light Gray Border */
+  --font-main: 'Inter', system-ui, sans-serif;
 }
 
 body {
   margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-main);
   background-color: var(--bg-dark);
   color: var(--text-main);
   min-height: 100vh;
-  background-image:
-    radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.1) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.1) 0px, transparent 50%);
-  background-attachment: fixed;
 }
 
 #root {
@@ -29,67 +43,192 @@ body {
   flex-direction: column;
 }
 
-/* Glassmorphism Utilities */
+/* Card Styling - Clean Minimalist */
 .glass-panel {
   background: var(--bg-card);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  border-radius: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid #000000;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  /* transition: all 0.2s ease; Removed animation */
+  overflow: hidden;
+  color: var(--text-main);
 }
 
 .glass-panel:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  border-color: rgba(255, 255, 255, 0.2);
+  /* transform: translateY(-2px); Removed animation */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  border-color: #000000;
 }
 
-.glass-panel.no-hover:hover {
+/* Specific override to disable hover effect on footer */
+footer.glass-panel:hover {
   transform: none;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: none;
+}
+
+/* Navbar - Minimalist Black/White (Match Footer) */
+nav.glass-panel {
+  background: #000000 !important;
+  border-bottom: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+  margin-bottom: 0;
+  padding: 1rem 2rem;
+  box-shadow: none;
+  margin-bottom: 3rem;
+  color: #FFFFFF !important;
+}
+
+nav.glass-panel a {
+  color: #FFFFFF;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  /* transition: all 0.2s; Removed animation */
+  transition: none !important;
+  /* Explicitly disable */
+}
+
+/* ... existing code ... */
+
+.input-field {
+  width: 100%;
+  padding: 1rem;
+  background: #FFFFFF;
+  border: 2px solid #E0E0E0;
+  border-radius: 4px;
+  color: #000000;
+  margin-bottom: 1rem;
+  /* transition: all 0.2s; Removed animation */
+  font-size: 1rem;
+}
+
+nav.glass-panel a:hover {
+  text-decoration: none !important;
+  color: #CCCCCC;
+}
+
+a {
+  text-decoration: none !important;
+}
+
+nav.glass-panel .btn {
+  background: transparent;
+  border: 1px solid #FFFFFF;
+  color: #FFFFFF;
+  transition: none !important;
+  /* Explicitly disable */
+}
+
+nav.glass-panel .btn:hover {
+  background: #FFFFFF;
+  color: #000000;
+}
+
+nav.glass-panel .btn-primary {
+  background: #FFFFFF !important;
+  color: #000000 !important;
+  font-weight: 700;
+  padding: 0.5rem 1.5rem;
+  border-radius: 4px;
+  border: none;
+  transition: none !important;
+  /* ULTRA FORCE REMOVE */
+  transform: none !important;
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+nav.glass-panel .btn-primary:hover {
+  background: #EEEEEE !important;
+  /* Slight immediate shade change for feedback */
+  transform: none !important;
+  transition: none !important;
+}
+
+/* Footer */
+footer.glass-panel {
+  background: #000000 !important;
+  border-radius: 0 !important;
+  margin-top: auto !important;
+  padding-top: 3rem;
+  padding-bottom: 2rem;
+  border-top: none;
+  color: #FFFFFF !important;
+}
+
+footer.glass-panel p,
+footer.glass-panel h4 {
+  color: #BBBBBB !important;
+}
+
+/* Page Title */
+.page-title {
+  font-size: 3rem;
+  font-weight: 900;
+  text-align: center;
+  margin-bottom: 3rem;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: -2px;
+  line-height: 1.1;
 }
 
 .btn {
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  border: none;
-  font-weight: 600;
+  padding: 0.8rem 2rem;
+  border-radius: 4px;
+  border: 1px solid #000000;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: none !important;
+  /* Force remove animation */
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  background: transparent;
+  color: #000000;
+}
+
+.btn:hover {
+  background: #000000;
+  color: #FFFFFF;
 }
 
 .btn-primary {
-  background: var(--primary);
-  color: white;
-  box-shadow: 0 0 15px rgba(100, 108, 255, 0.3);
+  background: #000000;
+  color: #FFFFFF;
+  border: 1px solid #000000;
 }
 
 .btn-primary:hover {
-  background: #535bf2;
-  transform: translateY(-1px);
-  box-shadow: 0 0 20px rgba(100, 108, 255, 0.5);
+  background: #333333;
+  color: white;
+  border-color: #333333;
 }
 
 .input-field {
   width: 100%;
-  padding: 0.75rem;
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid var(--glass-border);
-  border-radius: 0.5rem;
-  color: white;
+  padding: 1rem;
+  background: #FFFFFF;
+  border: 2px solid #E0E0E0;
+  border-radius: 4px;
+  color: #000000;
   margin-bottom: 1rem;
-  transition: border-color 0.2s;
+  /* transition: all 0.2s; Removed animation */
+  font-size: 1rem;
 }
 
 .input-field:focus {
   outline: none;
-  border-color: var(--accent);
+  border-color: #000000;
+  background: #FFFFFF;
 }
 
 .layout-container {
@@ -107,10 +246,13 @@ body {
 }
 
 a {
-  color: var(--accent);
-  text-decoration: none;
+  color: #000000;
+  text-decoration: underline;
+  /* transition: color 0.2s; Removed animation */
+  font-weight: 600;
 }
 
 a:hover {
-  text-decoration: underline;
+  color: #666666;
+  text-decoration: none;
 }

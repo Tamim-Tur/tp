@@ -35,7 +35,7 @@ export default function Home() {
 
     return (
         <div>
-            <h1 style={{ fontSize: '2.5rem', marginBottom: '2rem', background: 'linear-gradient(to right, #38bdf8, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            <h1 className="page-title">
                 Dernières Annonces
             </h1>
 
@@ -66,7 +66,7 @@ export default function Home() {
                                 <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
                                         <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{ad.title}</h3>
-                                        <span style={{ background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', padding: '0.25rem 0.75rem', borderRadius: '1rem', fontWeight: 'bold' }}>
+                                        <span style={{ background: '#F0F0F0', color: '#000000', padding: '0.25rem 0.75rem', borderRadius: '4px', fontWeight: 'bold', border: '1px solid #E0E0E0' }}>
                                             {ad.price} €
                                         </span>
                                     </div>

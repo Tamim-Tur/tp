@@ -20,28 +20,32 @@ export default function Login() {
     };
 
     return (
-        <div style={{ maxWidth: '400px', margin: '4rem auto' }} className="glass-panel">
+        <div style={{ maxWidth: '600px', margin: '6rem auto' }} className="glass-panel">
             <div style={{ padding: '2rem' }}>
-                <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>Connexion</h2>
-                {error && <div style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', textAlign: 'center' }}>{error}</div>}
+                <h2 style={{ textAlign: 'center', marginBottom: '2rem', textTransform: 'uppercase', fontWeight: '900' }}>Connexion</h2>
+                {error && <div style={{ border: '1px solid #FF0000', color: '#FF0000', background: '#FFFFFF', padding: '1rem', borderRadius: '4px', marginBottom: '1.5rem', fontWeight: 'bold' }}>{error}</div>}
                 <form onSubmit={handleSubmit}>
-                    <input
-                        type="email"
-                        placeholder="Email"
-                        className="input-field"
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        required
-                    />
-                    <input
-                        type="password"
-                        placeholder="Mot de passe"
-                        className="input-field"
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
-                        required
-                    />
-                    <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }}>
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem' }}>Email</label>
+                        <input
+                            type="email"
+                            className="input-field"
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div style={{ marginBottom: '2rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem' }}>Mot de passe</label>
+                        <input
+                            type="password"
+                            className="input-field"
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
                         Se connecter
                     </button>
                 </form>

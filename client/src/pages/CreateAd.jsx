@@ -66,11 +66,11 @@ export default function CreateAd() {
     return (
         <div style={{ maxWidth: '600px', margin: '2rem auto' }} className="glass-panel">
             <div style={{ padding: '2rem' }}>
-                <h2 style={{ marginBottom: '2rem' }}>Déposer une annonce</h2>
-                {error && <div style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>{error}</div>}
+                <h2 style={{ marginBottom: '2rem', textAlign: 'center', textTransform: 'uppercase', fontWeight: '900' }}>Déposer une annonce</h2>
+                {error && <div style={{ border: '1px solid #FF0000', color: '#FF0000', background: '#FFFFFF', padding: '1rem', borderRadius: '4px', marginBottom: '1.5rem', fontWeight: 'bold' }}>{error}</div>}
                 <form onSubmit={handleSubmit}>
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem' }}>Titre</label>
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem' }}>Titre</label>
                         <input
                             type="text"
                             className="input-field"
@@ -79,8 +79,8 @@ export default function CreateAd() {
                             required
                         />
                     </div>
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem' }}>Prix (€)</label>
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem' }}>Prix (€)</label>
                         <input
                             type="number"
                             className="input-field"
@@ -93,9 +93,9 @@ export default function CreateAd() {
                     </div>
 
                     {/* Image Upload Section */}
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem' }}>
-                            <Upload size={18} style={{ display: 'inline', marginRight: '0.5rem' }} />
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem' }}>
+                            <Upload size={18} style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'text-bottom' }} />
                             Image (JPG ou PNG)
                         </label>
                         <input
@@ -106,28 +106,28 @@ export default function CreateAd() {
                             style={{ padding: '0.5rem' }}
                             required
                         />
-                        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                        <p style={{ fontSize: '0.75rem', color: '#666666', marginTop: '0.25rem', fontStyle: 'italic' }}>
                             Formats acceptés: JPG, PNG (max 5MB)
                         </p>
 
                         {imagePreview && (
-                            <div style={{ marginTop: '1rem' }}>
+                            <div style={{ marginTop: '1rem', border: '1px solid #E0E0E0', padding: '0.5rem', borderRadius: '4px' }}>
                                 <img
                                     src={imagePreview}
                                     alt="Preview"
                                     style={{
                                         width: '100%',
-                                        maxHeight: '200px',
-                                        objectFit: 'cover',
-                                        borderRadius: '0.5rem'
+                                        maxHeight: '300px',
+                                        objectFit: 'contain',
+                                        borderRadius: '2px'
                                     }}
                                 />
                             </div>
                         )}
                     </div>
 
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem' }}>Description</label>
+                    <div style={{ marginBottom: '2rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem' }}>Description</label>
                         <textarea
                             className="input-field"
                             rows="5"
@@ -136,7 +136,7 @@ export default function CreateAd() {
                             required
                         ></textarea>
                     </div>
-                    <button type="submit" className="btn btn-primary">Publier l'annonce</button>
+                    <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>Publier l'annonce</button>
                 </form>
             </div>
         </div>

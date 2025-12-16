@@ -18,7 +18,7 @@ export default function Navbar() {
             borderRadius: '0 0 1rem 1rem',
             zIndex: 50
         }}>
-            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent)' }}>
+            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>
                 <ShoppingBag />
                 <span>CoinCoin</span>
             </Link>
@@ -26,7 +26,7 @@ export default function Navbar() {
             <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
                 {user ? (
                     <>
-                        <Link to="/create-ad" className="btn btn-primary">
+                        <Link to="/create-ad" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white', textDecoration: 'none', fontWeight: 'bold' }}>
                             <PlusCircle size={20} />
                             Déposer une annonce
                         </Link>
@@ -43,8 +43,8 @@ export default function Navbar() {
                     </>
                 ) : (
                     <>
-                        <Link to="/login" className="btn" style={{ color: 'white' }}>Connexion</Link>
-                        <Link to="/register" className="btn btn-primary">
+                        <Link to="/login" style={{ color: 'white', textDecoration: 'none', fontWeight: 'bold', textTransform: 'uppercase' }}>Connexion</Link>
+                        <Link to="/register" style={{ color: 'white', textDecoration: 'none', fontWeight: 'bold', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <LogIn size={20} />
                             Inscription
                         </Link>
