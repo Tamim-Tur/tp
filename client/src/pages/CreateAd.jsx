@@ -1,23 +1,57 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { Upload } from 'lucide-react';
 
 export default function CreateAd() {
     const [formData, setFormData] = useState({
         title: '',
         description: '',
-        price: '',
-        imageUrl: ''
+        price: ''
     });
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            // Validate file type
+            if (!['image/jpeg', 'image/png'].includes(file.type)) {
+                setError('Seuls les fichiers JPG et PNG sont acceptés');
+                return;
+            }
+            // Validate file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                setError('La taille du fichier ne doit pas dépasser 5MB');
+                return;
+            }
+            setImageFile(file);
+            setImagePreview(URL.createObjectURL(file));
+            setError('');
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!imageFile) {
+            setError('Veuillez sélectionner une image');
+            return;
+        }
+
         try {
-            await axios.post('/api/ads', {
-                ...formData,
-                price: parseFloat(formData.price)
+            const formDataToSend = new FormData();
+            formDataToSend.append('title', formData.title);
+            formDataToSend.append('description', formData.description);
+            formDataToSend.append('price', parseFloat(formData.price));
+            formDataToSend.append('image', imageFile);
+
+            await axios.post('/api/ads', formDataToSend, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
             });
             navigate('/');
         } catch (err) {
@@ -54,18 +88,44 @@ export default function CreateAd() {
                             onChange={e => setFormData({ ...formData, price: e.target.value })}
                             required
                             min="0"
+                            step="0.01"
                         />
                     </div>
+
+                    {/* Image Upload Section */}
                     <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem' }}>Image URL</label>
+                        <label style={{ display: 'block', marginBottom: '0.5rem' }}>
+                            <Upload size={18} style={{ display: 'inline', marginRight: '0.5rem' }} />
+                            Image (JPG ou PNG)
+                        </label>
                         <input
-                            type="url"
+                            type="file"
+                            accept=".jpg,.jpeg,.png"
+                            onChange={handleFileChange}
                             className="input-field"
-                            value={formData.imageUrl}
-                            onChange={e => setFormData({ ...formData, imageUrl: e.target.value })}
-                            placeholder="https://example.com/image.jpg"
+                            style={{ padding: '0.5rem' }}
+                            required
                         />
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                            Formats acceptés: JPG, PNG (max 5MB)
+                        </p>
+
+                        {imagePreview && (
+                            <div style={{ marginTop: '1rem' }}>
+                                <img
+                                    src={imagePreview}
+                                    alt="Preview"
+                                    style={{
+                                        width: '100%',
+                                        maxHeight: '200px',
+                                        objectFit: 'cover',
+                                        borderRadius: '0.5rem'
+                                    }}
+                                />
+                            </div>
+                        )}
                     </div>
+
                     <div style={{ marginBottom: '1rem' }}>
                         <label style={{ display: 'block', marginBottom: '0.5rem' }}>Description</label>
                         <textarea

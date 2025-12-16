@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import CreateAd from './pages/CreateAd';
 import Payment from './pages/Payment';
+import Messages from './pages/Messages';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -31,6 +32,16 @@ function AppRoutes() {
           <Route path="/payment/:adId" element={
             <PrivateRoute>
               <Payment />
+            </PrivateRoute>
+          } />
+          <Route path="/messages" element={
+            <PrivateRoute>
+              <Messages />
+            </PrivateRoute>
+          } />
+          <Route path="/messages/:adId/:userId" element={
+            <PrivateRoute>
+              <Messages />
             </PrivateRoute>
           } />
         </Routes>

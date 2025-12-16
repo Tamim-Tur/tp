@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ShoppingBag, LogOut, PlusCircle, User, LogIn } from 'lucide-react';
+import { ShoppingBag, LogOut, PlusCircle, User, LogIn, MessageCircle } from 'lucide-react';
 
 export default function Navbar() {
     const { user, logout } = useAuth();
@@ -25,6 +25,9 @@ export default function Navbar() {
                         <Link to="/create-ad" className="btn btn-primary">
                             <PlusCircle size={20} />
                             Déposer une annonce
+                        </Link>
+                        <Link to="/messages" className="btn" style={{ background: 'transparent', color: 'var(--text)', padding: '0.5rem' }} title="Mes messages">
+                            <MessageCircle size={20} />
                         </Link>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <User size={20} />

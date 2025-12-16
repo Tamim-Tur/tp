@@ -18,6 +18,8 @@ connectMongo();
 setupSecurity(app); // Helmet, CORS, Rate Limit
 app.use(express.json());
 app.use(cookieParser());
+app.use('/uploads', express.static('uploads')); // Serve uploaded files
+app.use('/images', express.static(require('path').join(__dirname, '../../images'))); // Serve default images from project root
 // app.use(morgan('dev'));
 
 // Simple Audit Middleware (logs to Mongo if available)
@@ -43,10 +45,13 @@ app.use(async (req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/ads', adRoutes);
 app.use('/api/transactions', require('./routes/transactionRoutes'));
+app.use('/api/messages', require('./routes/messageRoutes'));
 
 // Database sync
-sequelize.sync({ alter: true }).then(() => {
+sequelize.sync({ alter: true }).then(async () => {
     console.log('Database synced');
+    const seedData = require('./seed');
+    await seedData();
 });
 
 module.exports = app;

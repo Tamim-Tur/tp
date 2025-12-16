@@ -3,15 +3,28 @@ const { adSchema } = require('../utils/validation');
 
 exports.createAd = async (req, res) => {
     try {
-        const validatedData = adSchema.parse(req.body);
+        // Parse price to number since FormData sends everything as strings
+        const dataToValidate = {
+            ...req.body,
+            price: parseFloat(req.body.price)
+        };
 
-        // Fix: Convert empty string imageUrl to null to avoid Sequelize validation error
-        if (validatedData.imageUrl === '') {
-            validatedData.imageUrl = null;
+        const validatedData = adSchema.parse(dataToValidate);
+
+        // Handle image: either from file upload or URL
+        let imageUrl = validatedData.imageUrl || '';
+
+        if (req.file) {
+            // If file was uploaded, use the file path
+            imageUrl = `/uploads/${req.file.filename}`;
+        } else if (imageUrl === '') {
+            // Convert empty string to null to avoid Sequelize validation error
+            imageUrl = null;
         }
 
         const ad = await Ad.create({
             ...validatedData,
+            imageUrl,
             userId: req.user.userId
         });
 
