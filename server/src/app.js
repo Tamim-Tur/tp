@@ -46,6 +46,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/ads', adRoutes);
 app.use('/api/transactions', require('./routes/transactionRoutes'));
 app.use('/api/messages', require('./routes/messageRoutes'));
+app.use('/api/user', require('./routes/userRoutes'));
 
 // Database sync
 sequelize.sync({ alter: true }).then(async () => {

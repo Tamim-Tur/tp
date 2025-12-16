@@ -29,10 +29,10 @@ export default function Navbar() {
                         <Link to="/messages" className="btn" style={{ background: 'transparent', color: 'var(--text)', padding: '0.5rem' }} title="Mes messages">
                             <MessageCircle size={20} />
                         </Link>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Link to="/account" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text)', textDecoration: 'none' }}>
                             <User size={20} />
                             <span>{user.username}</span>
-                        </div>
+                        </Link>
                         <button onClick={logout} className="btn" style={{ background: 'transparent', border: '1px solid var(--danger)', color: 'var(--danger)' }}>
                             <LogOut size={20} />
                         </button>
