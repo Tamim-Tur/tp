@@ -13,7 +13,7 @@ User.hasMany(Transaction, { foreignKey: 'sellerId', as: 'sales' });
 Transaction.belongsTo(User, { foreignKey: 'buyerId', as: 'buyer' });
 Transaction.belongsTo(User, { foreignKey: 'sellerId', as: 'seller' });
 
-Transaction.belongsTo(Ad, { foreignKey: 'adId' });
+Transaction.belongsTo(Ad, { foreignKey: 'adId', as: 'ad' });
 Ad.hasOne(Transaction, { foreignKey: 'adId' });
 
 // Messaging Associations

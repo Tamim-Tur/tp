@@ -79,7 +79,7 @@ export default function Home() {
                                             <span>{ad.seller?.username || 'Anonyme'}</span>
                                         </div>
                                         <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                            {user && ad.userId !== (user.uuid || user.userId) && (
+                                            {user && ad.userId !== (user.uuid || user.userId) && ad.status !== 'sold' && (
                                                 <button
                                                     onClick={() => handleContact(ad)}
                                                     className="btn"
@@ -89,14 +89,27 @@ export default function Home() {
                                                     <MessageCircle size={18} />
                                                 </button>
                                             )}
-                                            <Link
-                                                to={`/payment/${ad.uuid}`}
-                                                state={{ ad }}
-                                                className="btn btn-primary"
-                                                style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
-                                            >
-                                                Acheter
-                                            </Link>
+                                            {ad.status === 'sold' ? (
+                                                <span style={{
+                                                    padding: '0.5rem 1rem',
+                                                    background: 'rgba(239, 68, 68, 0.2)',
+                                                    color: '#f87171',
+                                                    borderRadius: '0.5rem',
+                                                    fontWeight: 'bold',
+                                                    fontSize: '0.9rem'
+                                                }}>
+                                                    Vendu
+                                                </span>
+                                            ) : (
+                                                <Link
+                                                    to={`/payment/${ad.uuid}`}
+                                                    state={{ ad }}
+                                                    className="btn btn-primary"
+                                                    style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+                                                >
+                                                    Acheter
+                                                </Link>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

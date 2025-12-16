@@ -41,8 +41,9 @@ exports.createAd = async (req, res) => {
 exports.getAllAds = async (req, res) => {
     try {
         const ads = await Ad.findAll({
-            where: { status: 'available' },
-            include: [{ model: User, as: 'seller', attributes: ['username'] }]
+            // where: { status: 'available' }, // removed to show sold items
+            include: [{ model: User, as: 'seller', attributes: ['username'] }],
+            order: [['createdAt', 'DESC']]
         });
         res.json(ads);
     } catch (error) {

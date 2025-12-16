@@ -21,15 +21,18 @@ exports.getMyPurchases = async (req, res) => {
     }
 };
 
-// Get user's sales (ads created by user)
+// Get user's sales (ads created by user that have been sold)
 exports.getMySales = async (req, res) => {
     try {
         const sales = await Ad.findAll({
-            where: { userId: req.user.userId },
+            where: {
+                userId: req.user.userId,
+                status: 'sold' // Only show sold items
+            },
             include: [
                 {
                     model: Transaction,
-                    required: false,
+                    required: true, // Only include ads that have a transaction
                     include: [{ model: User, as: 'buyer', attributes: ['username', 'email'] }]
                 }
             ],

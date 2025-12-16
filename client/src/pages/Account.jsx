@@ -121,7 +121,10 @@ export default function Account() {
                                     )}
                                     <div style={{ flex: 1 }}>
                                         <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem' }}>{purchase.ad?.title}</h4>
-                                        <p style={{ color: 'var(--text-muted)', margin: '0 0 0.5rem 0' }}>
+                                        <p style={{ color: 'var(--text-muted)', margin: '0 0 0.5rem 0', fontSize: '0.875rem' }}>
+                                            {purchase.ad?.description?.substring(0, 100)}...
+                                        </p>
+                                        <p style={{ color: 'var(--text-muted)', margin: '0.5rem 0' }}>
                                             Vendeur: {purchase.ad?.seller?.username}
                                         </p>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '1rem' }}>
@@ -133,8 +136,15 @@ export default function Account() {
                                                 <Calendar size={16} />
                                                 {new Date(purchase.createdAt).toLocaleDateString('fr-FR')}
                                             </span>
-                                            <span style={{ marginLeft: 'auto', background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', padding: '0.25rem 0.75rem', borderRadius: '1rem', fontSize: '0.875rem' }}>
-                                                {purchase.status === 'completed' ? 'Complété' : purchase.status}
+                                            <span style={{
+                                                marginLeft: 'auto',
+                                                background: 'rgba(34, 197, 94, 0.2)',
+                                                color: '#4ade80',
+                                                padding: '0.25rem 0.75rem',
+                                                borderRadius: '1rem',
+                                                fontSize: '0.875rem'
+                                            }}>
+                                                {purchase.status === 'completed' ? 'Acheté' : purchase.status}
                                             </span>
                                         </div>
                                     </div>

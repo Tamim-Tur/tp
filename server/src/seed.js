@@ -48,11 +48,13 @@ const seedData = async () => {
             console.log('Admin already exists.');
         }
 
-        // DELETE ONLY Alice and Bob's ads (default ads), keep user-created ads
+        // DELETE ONLY Alice and Bob's ads (default ads), keep user-created ads AND sold ads
         console.log('Deleting default ads (Alice & Bob only)...');
+        const { Op } = require('sequelize'); // Make sure to import Op
         await Ad.destroy({
             where: {
-                userId: [alice.uuid, bob.uuid]
+                userId: [alice.uuid, bob.uuid],
+                status: { [Op.ne]: 'sold' } // DO NOT DELETE SOLD ADS
             }
         });
 
