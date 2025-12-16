@@ -10,6 +10,9 @@ const messageSchema = z.object({
 
 exports.sendMessage = async (req, res) => {
     try {
+        console.log('sendMessage called. Body:', req.body);
+        console.log('User:', req.user);
+
         const { adId, content, receiverId } = messageSchema.parse(req.body);
 
         if (req.user.userId === receiverId) {
@@ -27,13 +30,15 @@ exports.sendMessage = async (req, res) => {
             content
         });
 
+        console.log('Message created:', message.uuid);
         res.status(201).json(message);
     } catch (error) {
         if (error.issues) {
+            console.log('Zod validation error:', error.issues);
             return res.status(400).json({ errors: error.issues });
         }
-        console.error('Send message error:', error);
-        res.status(500).json({ message: 'Server error' });
+        console.error('Send message error details:', error);
+        res.status(500).json({ message: 'Server error: ' + error.message });
     }
 };
 
@@ -108,6 +113,41 @@ exports.getMessages = async (req, res) => {
         res.json(messages);
     } catch (error) {
         console.error('Get messages error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.getUnreadCount = async (req, res) => {
+    try {
+        const count = await Message.count({
+            where: {
+                receiverId: req.user.userId,
+                isRead: false
+            }
+        });
+        res.json({ count });
+    } catch (error) {
+        console.error('Get unread count error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.markAsRead = async (req, res) => {
+    try {
+        const { adId, senderId } = req.body;
+
+        await Message.update({ isRead: true }, {
+            where: {
+                receiverId: req.user.userId,
+                senderId: senderId,
+                adId: adId,
+                isRead: false
+            }
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Mark as read error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };

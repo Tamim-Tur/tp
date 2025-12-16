@@ -1,6 +1,50 @@
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ShoppingBag, LogOut, PlusCircle, User, LogIn, MessageCircle } from 'lucide-react';
+
+const NotificationBadge = () => {
+    const [count, setCount] = useState(0);
+
+    const fetchCount = async () => {
+        try {
+            const res = await axios.get('/api/messages/unread-count');
+            setCount(res.data.count);
+        } catch (err) {
+            console.error("Failed to fetch notification count", err);
+        }
+    };
+
+    useEffect(() => {
+        fetchCount();
+        const interval = setInterval(fetchCount, 30000); // Poll every 30s
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <Link to="/messages" className="btn" style={{ background: 'transparent', color: 'var(--text)', padding: '0.5rem', position: 'relative' }} title="Mes messages">
+            <MessageCircle size={20} />
+            {count > 0 && (
+                <span style={{
+                    position: 'absolute',
+                    top: '-5px',
+                    right: '-5px',
+                    background: 'red',
+                    color: 'white',
+                    borderRadius: '50%',
+                    padding: '2px 6px',
+                    fontSize: '0.7rem',
+                    fontWeight: 'bold',
+                    minWidth: '18px',
+                    textAlign: 'center'
+                }}>
+                    {count}
+                </span>
+            )}
+        </Link>
+    );
+};
 
 export default function Navbar() {
     const { user, logout } = useAuth();
@@ -30,9 +74,7 @@ export default function Navbar() {
                             <PlusCircle size={20} />
                             Déposer une annonce
                         </Link>
-                        <Link to="/messages" className="btn" style={{ background: 'transparent', color: 'var(--text)', padding: '0.5rem' }} title="Mes messages">
-                            <MessageCircle size={20} />
-                        </Link>
+                        <NotificationBadge />
                         <Link to="/account" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text)', textDecoration: 'none' }}>
                             <User size={20} />
                             <span>{user.username}</span>

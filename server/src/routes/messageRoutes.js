@@ -6,6 +6,8 @@ router.use(verifyToken);
 
 router.post('/', messageController.sendMessage);
 router.get('/conversations', messageController.getConversations);
+router.get('/unread-count', messageController.getUnreadCount);
+router.put('/read', messageController.markAsRead);
 router.get('/:otherUserId/:adId', messageController.getMessages);
 
 module.exports = router;

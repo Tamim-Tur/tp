@@ -31,6 +31,17 @@ export default function Home() {
         navigate(`/messages/${ad.uuid}/${ad.seller.uuid || ad.userId}`, { state: { ad } });
     };
 
+    const handleMarkAsSold = async (adUuid) => {
+        if (!confirm("Marquer cet article comme VENDU ?")) return;
+        try {
+            await axios.patch(`/api/ads/${adUuid}/sold`);
+            setAds(prev => prev.map(ad => ad.uuid === adUuid ? { ...ad, status: 'sold' } : ad));
+        } catch (err) {
+            console.error(err);
+            alert("Erreur lors de la mise à jour");
+        }
+    };
+
     if (loading) return <div style={{ textAlign: 'center', marginTop: '4rem' }}>Chargement des annonces...</div>;
 
     return (
@@ -39,12 +50,22 @@ export default function Home() {
                 Dernières Annonces
             </h1>
 
+            {/* Promotion Ribbon */}
+            <div className="promo-ribbon-container">
+                <div className="promo-ribbon-track">
+                    {Array(10).fill("PROMOTION -250% ").map((text, i) => (
+                        <span key={i} className="promo-item">{text}</span>
+                    ))}
+                </div>
+            </div>
+
             {ads.length === 0 ? (
                 <p>Aucune annonce pour le moment. Soyez le premier !</p>
             ) : (
                 <div className="grid-auto">
                     {ads.map((ad, i) => {
                         // console.log('Ad:', ad.uuid, 'Seller:', ad.userId, 'Me:', user?.uuid || user?.userId);
+                        const isMyAd = user && (ad.seller?.uuid === user.uuid || ad.userId === user.userId || ad.userId === user.uuid);
                         return (
                             <motion.div
                                 key={ad.uuid}
@@ -55,7 +76,7 @@ export default function Home() {
                                 style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                             >
                                 {ad.imageUrl && (
-                                    <div style={{ height: '200px', overflow: 'hidden' }}>
+                                    <div style={{ height: '250px', overflow: 'hidden' }}>
                                         <img
                                             src={ad.imageUrl}
                                             alt={ad.title}
@@ -79,7 +100,7 @@ export default function Home() {
                                             <span>{ad.seller?.username || 'Anonyme'}</span>
                                         </div>
                                         <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                            {user && ad.userId !== (user.uuid || user.userId) && ad.status !== 'sold' && (
+                                            {!isMyAd && ad.status !== 'sold' && (
                                                 <button
                                                     onClick={() => handleContact(ad)}
                                                     className="btn"
@@ -92,14 +113,53 @@ export default function Home() {
                                             {ad.status === 'sold' ? (
                                                 <span style={{
                                                     padding: '0.5rem 1rem',
-                                                    background: 'rgba(239, 68, 68, 0.2)',
-                                                    color: '#f87171',
-                                                    borderRadius: '0.5rem',
+                                                    background: '#FFFFFF',
+                                                    color: '#FF0000',
+                                                    border: '1px solid #FF0000',
+                                                    borderRadius: '4px',
                                                     fontWeight: 'bold',
-                                                    fontSize: '0.9rem'
+                                                    fontSize: '0.9rem',
+                                                    textTransform: 'uppercase'
                                                 }}>
                                                     Vendu
                                                 </span>
+                                            ) : isMyAd ? (
+                                                <>
+                                                    <Link
+                                                        to={`/edit-ad/${ad.uuid}`}
+                                                        className="btn"
+                                                        style={{
+                                                            padding: '0.5rem 1rem',
+                                                            fontSize: '0.8rem',
+                                                            border: '1px solid #000000',
+                                                            color: '#000000',
+                                                            background: 'transparent',
+                                                            fontWeight: 'bold',
+                                                            textTransform: 'uppercase',
+                                                            textDecoration: 'none',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center'
+                                                        }}
+                                                    >
+                                                        MODIFIER
+                                                    </Link>
+                                                    <button
+                                                        onClick={() => handleMarkAsSold(ad.uuid)}
+                                                        className="btn"
+                                                        style={{
+                                                            padding: '0.5rem 1rem',
+                                                            fontSize: '0.8rem',
+                                                            border: '1px solid #000000',
+                                                            color: '#000000',
+                                                            background: 'transparent',
+                                                            fontWeight: 'bold',
+                                                            textTransform: 'uppercase'
+                                                        }}
+                                                    >
+                                                        MARQUER VENDU
+                                                    </button>
+                                                </>
                                             ) : (
                                                 <Link
                                                     to={`/payment/${ad.uuid}`}

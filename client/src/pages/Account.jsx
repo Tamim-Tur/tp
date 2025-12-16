@@ -3,7 +3,7 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import { Package, ShoppingBag, User, Calendar, Euro } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 export default function Account() {
     const [activeTab, setActiveTab] = useState('purchases');
@@ -200,17 +200,65 @@ export default function Account() {
                                                 <Calendar size={14} />
                                                 {new Date(sale.createdAt).toLocaleDateString('fr-FR')}
                                             </span>
-                                            <span style={{
-                                                marginLeft: 'auto',
-                                                border: sale.status === 'sold' ? '1px solid #FF0000' : '1px solid #000000',
-                                                color: sale.status === 'sold' ? '#FF0000' : '#000000',
-                                                padding: '0.25rem 0.75rem',
-                                                fontSize: '0.75rem',
-                                                textTransform: 'uppercase',
-                                                fontWeight: 'bold'
-                                            }}>
-                                                {sale.status === 'sold' ? 'VENDU' : 'EN VENTE'}
-                                            </span>
+                                            {sale.status === 'sold' ? (
+                                                <span style={{
+                                                    marginLeft: 'auto',
+                                                    border: '1px solid #FF0000',
+                                                    color: '#FF0000',
+                                                    padding: '0.25rem 0.75rem',
+                                                    fontSize: '0.75rem',
+                                                    textTransform: 'uppercase',
+                                                    fontWeight: 'bold',
+                                                    background: '#FFFFFF'
+                                                }}>
+                                                    VENDU
+                                                </span>
+                                            ) : (
+                                                <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem' }}>
+                                                    <Link
+                                                        to={`/edit-ad/${sale.uuid}`}
+                                                        style={{
+                                                            border: '1px solid #000000',
+                                                            color: '#000000',
+                                                            padding: '0.25rem 0.75rem',
+                                                            fontSize: '0.75rem',
+                                                            textTransform: 'uppercase',
+                                                            fontWeight: 'bold',
+                                                            background: 'transparent',
+                                                            textDecoration: 'none',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center'
+                                                        }}
+                                                    >
+                                                        MODIFIER
+                                                    </Link>
+                                                    <button
+                                                        onClick={async () => {
+                                                            if (!confirm("Marquer comme vendu ?")) return;
+                                                            try {
+                                                                await axios.patch(`/api/ads/${sale.uuid}/sold`);
+                                                                // Refresh or update local state
+                                                                window.location.reload();
+                                                            } catch (e) {
+                                                                console.error(e);
+                                                                alert("Erreur");
+                                                            }
+                                                        }}
+                                                        style={{
+                                                            border: '1px solid #000000',
+                                                            color: '#000000',
+                                                            padding: '0.25rem 0.75rem',
+                                                            fontSize: '0.75rem',
+                                                            textTransform: 'uppercase',
+                                                            fontWeight: 'bold',
+                                                            background: 'transparent',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        MARQUER VENDU
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

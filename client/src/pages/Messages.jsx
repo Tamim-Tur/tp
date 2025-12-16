@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { Send, User, MessageCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Send, MessageCircle } from 'lucide-react';
 
 export default function Messages() {
     const { user } = useAuth();
@@ -70,6 +69,12 @@ export default function Messages() {
             const res = await axios.get(`/api/messages/${otherId}/${aId}`);
             setMessages(res.data);
             scrollToBottom();
+
+            // Mark as read
+            await axios.put('/api/messages/read', {
+                adId: aId,
+                senderId: otherId
+            });
         } catch (err) {
             console.error(err);
         }
@@ -84,6 +89,12 @@ export default function Messages() {
         if (!newMessage.trim() || !activeChat) return;
 
         try {
+            console.log("Sending message...", {
+                adId: activeChat.ad.uuid,
+                receiverId: activeChat.otherUser.uuid,
+                content: newMessage
+            });
+
             const res = await axios.post('/api/messages', {
                 adId: activeChat.ad.uuid,
                 receiverId: activeChat.otherUser.uuid,
@@ -95,8 +106,9 @@ export default function Messages() {
             scrollToBottom();
             fetchConversations();
         } catch (err) {
-            console.error(err);
-            alert('Failed to send message');
+            console.error("Send message error:", err);
+            const errorMsg = err.response?.data?.message || err.response?.data?.errors?.[0]?.message || 'Failed to send message';
+            alert(`Erreur: ${errorMsg}`);
         }
     };
 
@@ -107,15 +119,15 @@ export default function Messages() {
     };
 
     return (
-        <div style={{ display: 'flex', height: 'calc(100vh - 100px)', gap: '1rem' }}>
+        <div className="chat-container">
             {/* Sidebar List */}
-            <div className="glass-panel" style={{ width: '300px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                <div style={{ padding: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                    <h2 style={{ margin: 0, fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div className="glass-panel chat-sidebar">
+                <div style={{ padding: '1rem', borderBottom: '1px solid #E0E0E0' }}>
+                    <h2 style={{ margin: 0, fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', textTransform: 'uppercase', fontWeight: 'bold' }}>
                         <MessageCircle size={20} /> Discussions
                     </h2>
                 </div>
-                <div style={{ flex: 1, overflowY: 'auto' }}>
+                <div className="chat-list">
                     {conversations.length === 0 ? (
                         <p style={{ padding: '1rem', color: 'var(--text-muted)' }}>Aucune conversation.</p>
                     ) : (
@@ -123,16 +135,11 @@ export default function Messages() {
                             <div
                                 key={`${conv.ad.uuid}-${conv.otherUser.uuid}`}
                                 onClick={() => selectConversation(conv)}
-                                style={{
-                                    padding: '1rem',
-                                    cursor: 'pointer',
-                                    background: activeChat?.ad?.uuid === conv.ad.uuid && activeChat?.otherUser?.uuid === conv.otherUser.uuid ? 'rgba(255,255,255,0.1)' : 'transparent',
-                                    borderBottom: '1px solid rgba(255,255,255,0.05)'
-                                }}
+                                className={`chat-item ${activeChat?.ad?.uuid === conv.ad.uuid && activeChat?.otherUser?.uuid === conv.otherUser.uuid ? 'active' : ''}`}
                             >
-                                <div style={{ fontWeight: 'bold' }}>{conv.otherUser.username}</div>
-                                <div style={{ fontSize: '0.8rem', color: 'var(--accent)' }}>{conv.ad.title}</div>
-                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                <div style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.9rem' }}>{conv.otherUser.username}</div>
+                                <div style={{ fontSize: '0.8rem', color: '#666666' }}>{conv.ad.title}</div>
+                                <div style={{ fontSize: '0.8rem', color: '#999999', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                     {conv.lastMessage.content}
                                 </div>
                             </div>
@@ -142,30 +149,22 @@ export default function Messages() {
             </div>
 
             {/* Chat Area */}
-            <div className="glass-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div className="glass-panel chat-window">
                 {activeChat ? (
                     <>
-                        <div style={{ padding: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)' }}>
-                            <strong>{activeChat.otherUser.username}</strong>
-                            <span style={{ margin: '0 0.5rem', color: 'var(--text-muted)' }}>•</span>
-                            <span style={{ color: 'var(--accent)' }}>{activeChat.ad.title}</span>
+                        <div className="chat-header">
+                            <strong style={{ textTransform: 'uppercase' }}>{activeChat.otherUser.username}</strong>
+                            <span style={{ margin: '0 0.5rem', color: '#E0E0E0' }}>|</span>
+                            <span style={{ color: '#666666', fontSize: '0.9rem' }}>{activeChat.ad.title}</span>
                         </div>
 
-                        <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <div className="messages-list">
                             {messages.map((msg) => {
                                 const isMe = msg.senderId === user.uuid;
                                 return (
-                                    <div key={msg.uuid} style={{
-                                        alignSelf: isMe ? 'flex-end' : 'flex-start',
-                                        maxWidth: '70%',
-                                        background: isMe ? 'var(--primary)' : 'rgba(255,255,255,0.1)',
-                                        padding: '0.75rem',
-                                        borderRadius: '1rem',
-                                        borderBottomRightRadius: isMe ? '0' : '1rem',
-                                        borderBottomLeftRadius: isMe ? '1rem' : '0'
-                                    }}>
+                                    <div key={msg.uuid} className={`message-bubble ${isMe ? 'me' : 'other'}`}>
                                         <div>{msg.content}</div>
-                                        <div style={{ fontSize: '0.7rem', opacity: 0.7, marginTop: '0.25rem', textAlign: 'right' }}>
+                                        <div style={{ fontSize: '0.65rem', opacity: 0.7, marginTop: '0.25rem', textAlign: 'right' }}>
                                             {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </div>
                                     </div>
@@ -174,22 +173,23 @@ export default function Messages() {
                             <div ref={messagesEndRef} />
                         </div>
 
-                        <form onSubmit={handleSendMessage} style={{ padding: '1rem', background: 'rgba(0,0,0,0.2)', display: 'flex', gap: '0.5rem' }}>
+                        <form onSubmit={handleSendMessage} className="chat-input-area">
                             <input
-                                className="input"
+                                className="input-field"
                                 value={newMessage}
                                 onChange={(e) => setNewMessage(e.target.value)}
                                 placeholder="Écrivez votre message..."
                                 style={{ margin: 0 }}
                             />
-                            <button type="submit" className="btn btn-primary" style={{ padding: '0 1rem' }}>
+                            <button type="submit" className="btn btn-primary" style={{ padding: '0 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <Send size={20} />
                             </button>
                         </form>
                     </>
                 ) : (
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-                        Selectionnez une conversation pour commencer
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999999', flexDirection: 'column', gap: '1rem' }}>
+                        <MessageCircle size={48} style={{ opacity: 0.2 }} />
+                        <p>Sélectionnez une conversation pour commencer</p>
                     </div>
                 )}
             </div>

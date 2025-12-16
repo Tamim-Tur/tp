@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import CreateAd from './pages/CreateAd';
+import EditAd from './pages/EditAd';
 import Payment from './pages/Payment';
 import Messages from './pages/Messages';
 import Account from './pages/Account';
@@ -29,6 +30,11 @@ function AppRoutes() {
           <Route path="/create-ad" element={
             <PrivateRoute>
               <CreateAd />
+            </PrivateRoute>
+          } />
+          <Route path="/edit-ad/:uuid" element={
+            <PrivateRoute>
+              <EditAd />
             </PrivateRoute>
           } />
           <Route path="/payment/:adId" element={
