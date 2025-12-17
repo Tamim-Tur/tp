@@ -21,6 +21,16 @@ npm start
 ```
 App: http://localhost:3002
 
+If `npm audit` shows 0 vulnerabilities
+- Remove lock and modules, then reinstall to force the vulnerable graph:
+```powershell
+cd "C:\Users\tamim\Desktop\etudes 2025-2026\Efrei\cours\semaine de 15-19 decembre\TP FINAL\training\insecure-demo"
+Remove-Item package-lock.json -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force node_modules -ErrorAction SilentlyContinue
+npm install
+npm audit --audit-level=low
+```
+
 ## Quick ZAP scan (GUI)
 - Start ZAP.
 - Set target: http://localhost:3002

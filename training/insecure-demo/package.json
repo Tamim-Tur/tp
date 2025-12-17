@@ -10,6 +10,11 @@
   "dependencies": {
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "lodash": "4.17.15",
+    "minimist": "0.0.8",
+    "handlebars": "4.7.3",
+    "serialize-javascript": "2.1.1",
+    "ua-parser-js": "0.7.22"
   }
 }
