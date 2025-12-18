@@ -1,0 +1,205 @@
+Sécurisation de l’API : Failles et Protections (Avant / Après)
+
+A. Gestion des Secrets
+Avant (Vulnérable): clés JWT et identifiants DB en dur dans le code.
+Après (Sécurisé): variables d’environnement via .env et process.env.
+Références: server/src/controllers/authController.js, server/src/config/database.js, server/src/server.js
+
+B. Validation des Entrées (Zod)
+Avant: données traitées directement par les contrôleurs (formats invalides possibles, risque injection logique).
+Après: schémas Zod pour register, login, ad, payment; parse() rejette les données non conformes avant DB.
+Références: server/src/utils/validation.js, server/src/controllers/authController.js, server/src/controllers/adController.js, server/src/controllers/transactionController.js
+
+C. Protection contre le Brute Force (Rate Limiting)
+Avant: aucune limite, attaques par essais massifs possibles.
+Après: express-rate-limit global (100 requêtes / 15 min) + recommandation d’un limiteur dédié pour /api/auth/login.
+Références: server/src/middleware/securityMiddleware.js, server/src/routes/authRoutes.js
+
+D. CORS (Origines autorisées)
+Avant: origine permissive ou mal configurée, cookies envoyés cross-site.
+Après: origin basé sur FRONTEND_URL, credentials:true, méthodes/headers limités; whitelist stricte en production.
+Références: server/src/middleware/securityMiddleware.js
+
+E. Headers de Sécurité (Helmet, HSTS, CSP)
+Avant: peu de headers renforcés, CSP absente.
+Après: helmet() + HSTS; CSP recommandée pour limiter img-src, connect-src, script-src selon besoin.
+Références: server/src/middleware/securityMiddleware.js
+
+F. Authentification JWT (Transport et stricte)
+Avant: tolérance sur le format du header Authorization (non strict), exposition potentielle.
+Après: token posé en cookie httpOnly/secure/SameSite:'none'; variante stricte proposée: n’accepter que Bearer <token>.
+Références: server/src/controllers/authController.js, server/src/middleware/authMiddleware.js
+
+G. Upload de Fichiers (Validation et Exposition)
+Avant: filtrage basé sur mimetype (spoofable) et exposition statique de /uploads.
+Après: exemple sécurisé (commenté) avec validation “magic bytes” (file-type), memoryStorage, extension dérivée; servir via contrôleur (Content-Disposition: attachment).
+Références: server/src/middleware/uploadMiddleware.js, server/src/app.js
+
+H. Seed et Migrations (Stabilité prod)
+Avant: sequelize.sync({ alter:true }) au run + seed auto créant comptes par défaut (admin/password123).
+Après: migrations (Sequelize-CLI/Umzug); seed conditionné (SEED=true, interdiction en prod); mot de passe admin injecté par env.
+Références: server/src/app.js, server/src/seed.js
+
+I. Audit & Journalisation
+Avant: faible traçabilité des requêtes/utilisateurs.
+Après: audit Mongo des requêtes (méthode, path, IP, userId, statut) pour détection d’abus et forensic.
+Références: server/src/app.js, server/src/models/mongo/AuditLog.js
+
+J. Hashing des Mots de Passe + Politique
+Avant: risque de stockage en clair; mots de passe faibles.
+Après: bcrypt.hash/bcrypt.compare; politique Zod (min 8, majuscule, chiffre, caractère spécial).
+Références: server/src/controllers/authController.js, server/src/seed.js, server/src/utils/validation.js
+
+K. Validations/Contraintes Sequelize (DB)
+Avant: champs libres (ex: title vide, email non valide).
+Après: validations Sequelize (len, isEmail, notEmpty) pour User/Ad.
+Références: server/src/models/User.js, server/src/models/Ad.js
+
+L. Paiement: Tokenisation et Données Sensibles
+Avant: stockage du PAN complet (numéro de carte) et CVV.
+Après: tokenisation (mock gateway), stockage du paymentToken et des 4 derniers chiffres masqués, jamais le PAN complet.
+Références: server/src/controllers/transactionController.js, server/src/models/Transaction.js
+
+M. Autorisations Métier (Contrôle d’accès)
+Avant: modifications potentiellement possibles sur les ressources d’autrui.
+Après: vérifications d’appartenance (ad.userId === req.user.userId) pour update/delete/sold.
+Références: server/src/controllers/adController.js
+
+—
+Scénarios de Démo (Avant → Après)
+1) Compte admin par défaut:
+   - Avant: POST /api/auth/login admin@example.com / password123 → succès.
+   - Après: seed désactivé en prod (SEED), mot de passe via env; login échoue sans credentials légitimes.
+
+2) Bruteforce sur /login:
+   - Avant: essais multiples sans blocage.
+   - Après: limiter dédié (ex: 5 tentatives/10 min par IP/email) → 429.
+
+3) Upload non-image:
+   - Avant: fichier avec mimetype falsifié accepté, accessible sous /uploads.
+   - Après: validation “magic bytes” et serving non statique → refus (415/400) ou téléchargement non exécutable.
+
+4) CORS / Cookies:
+   - Avant: origine permissive, cookies envoyés cross-site.
+   - Après: whitelist stricte et credentials:true seulement pour domaine légitime.
+
+Notes de mise en œuvre
+- Activer les protections “recommandées”:
+  • Limiteur de login dédié dans authRoutes.
+  • Validation file-type et serving via contrôleur pour /uploads.
+  • Gating du seed par variables d’environnement et interdiction en prod.
+  • CSP adaptée au front (helmet.contentSecurityPolicy).
+
+Compléments (5.1 – 5.4) — Détails et Références
+5.1 Sécurité des communications
+- HTTPS (TLS): serveur HTTPS dans server/src/server.js (startServer → https.createServer) avec certificats auto-signés générés par server/src/utils/certGenerator.js (generateCertificates).
+- HSTS: activé via helmet.hsts() dans server/src/middleware/securityMiddleware.js (setupSecurity).
+- Headers HTTP: helmet() appliqué (noSniff, frameguard, etc.).
+- CORS: configuré via cors() (origin/credentials/methods/allowedHeaders) dans server/src/middleware/securityMiddleware.js.
+
+5.2 Authentification & sessions
+- Hashage: bcrypt.hash()/compare() dans server/src/controllers/authController.js et server/src/seed.js.
+- JWT en cookie: génération avec jsonwebtoken.sign et cookie httpOnly/secure/SameSite:'none' dans server/src/controllers/authController.js.
+- Expiration: expiresIn: '1h' et cookie maxAge: 3600000 ms (server/src/controllers/authController.js).
+- Protection brute force: express-rate-limit global (100/15 min) dans server/src/middleware/securityMiddleware.js; limitateur dédié login recommandé.
+- Session fixation: le JWT est régénéré à chaque login et stocké côté client en cookie HttpOnly; pas d’ID de session persistant côté serveur.
+
+5.3 OWASP (principales)
+- Injection SQL/NoSQL: Sequelize (findByPk/findAll/create) évite la concaténation, Zod filtre l’entrée; Mongo utilisé pour AuditLog (sans injections d’entrée utilisateur).
+- XSS: côté client, React échappe par défaut et aucune utilisation de dangerouslySetInnerHTML; côté serveur, helmet + absence de rendu HTML direct.
+- Accès: middleware verifyToken et contrôles d’appartenance dans adController (update/delete/sold); routes protégées.
+- Config: HTTPS par défaut, helmet/HSTS, CORS strict, audit optionnel.
+- Crypto: mdp hashés (bcrypt), JWT signé (env), paiement tokenisé sans PAN.
+- Dépendances: auditables via npm audit (server/client package.json).
+
+5.4 Stockage sécurisé des données
+- Séparation secrets/config: DB via env (server/src/config/database.js), Mongo conditionné par MONGO_URI (server/src/config/mongo.js). Exemple d’environnements: server/.env.example.
+- Données sensibles: jamais de mot de passe en clair; pas de stockage du numéro de carte (PAN) ni CVV — uniquement paymentToken et maskedCardNumber (4 derniers chiffres).
+
+============================================================
+Rapport détaillé consolidé (Avant/Après + 5.x)
+============================================================
+
+A) Gestion des Secrets
+Avant: secrets et identifiants potentiellement codés en dur (risque exfiltration Git).
+Après: `.env` + `process.env.*` (JWT, DB, Mongo, FRONTEND_URL). `.env` ignoré par Git.
+Références: server/src/controllers/authController.js, server/src/config/database.js, server/.env.example, server/src/server.js
+Démo: commit search révèle les secrets en clair (Avant); Après, seules variables d’env.
+
+B) Validation des Entrées (Zod)
+Avant: données non normalisées pouvant contourner contraintes, provoquer erreurs logiques.
+Après: schémas stricts (`register`, `login`, `ad`, `payment`) avec messages d’erreur clairs; les contrôleurs appellent `.parse()`.
+Références: server/src/utils/validation.js; usage dans authController, adController, transactionController, messageController.
+Démo: envoyer email invalide → 400 Zod; prix négatif → 400.
+
+C) Protection Brute Force (Rate Limiting)
+Avant: pas de seuil; essais massifs de mots de passe.
+Après: limite globale 100/15min; recommandation d’un limiteur dédié pour `/login` (5 essais/10min).
+Références: server/src/middleware/securityMiddleware.js; exemple d’application dans server/src/routes/authRoutes.js (commenté).
+Démo: boucler sur `/login` → 429 après seuil.
+
+D) CORS (Origines autorisées)
+Avant: risque d’origine trop permissive, fuite de cookies cross-site.
+Après: CORS avec origine FRONTEND_URL, `credentials: true`, méthodes/headers limités; whitelist stricte en prod.
+Références: server/src/middleware/securityMiddleware.js
+Démo: requête depuis domaine non autorisé → bloquée.
+
+E) Headers de Sécurité (Helmet, HSTS, CSP)
+Avant: headers par défaut insuffisants; pas de HSTS/CSP.
+Après: `helmet()` + `helmet.hsts()`. CSP proposée (commentée) pour réduire surface XSS/canaux externes.
+Références: server/src/middleware/securityMiddleware.js
+Démo: vérifier réponses HTTP: Strict-Transport-Security, X-Frame-Options, X-Content-Type-Options.
+
+F) Authentification JWT (transport, durée, cookies)
+Avant: schéma Authorization non strict; token potentiellement manipulable côté client.
+Après: JWT en cookie `HttpOnly`, `Secure`, `SameSite:'none'`, expiration 1h; variante middleware stricte `Bearer` proposée.
+Références: server/src/controllers/authController.js (login/logout), server/src/middleware/authMiddleware.js
+Démo: absence de lecture du token par JS (HttpOnly); header non Bearer refusé (version stricte).
+
+G) Upload de fichiers (Validation et exposition)
+Avant: contrôle de type basé sur `mimetype` (spoofable); exposition statique de `/uploads`.
+Après: exemple sécurisé (commenté) avec détection “magic bytes” (`file-type`), `memoryStorage`, renommage contrôlé; servir via contrôleur avec `Content-Disposition: attachment`.
+Références: server/src/middleware/uploadMiddleware.js, server/src/app.js
+Démo: fichier .js renommé en .png → refusé avec “magic bytes” activé.
+
+H) Seed & Migrations (stabilité prod)
+Avant: `sequelize.sync({ alter:true })` au run + seed auto (admin/password123).
+Après: migrations outillées; seed derrière flags env (`SEED`) et interdit en prod; mots de passe admins via env.
+Références: server/src/app.js, server/src/seed.js
+Démo: en prod, pas de seed; en dev avec `SEED=true`, données de démo contrôlées.
+
+I) Audit & Journalisation
+Avant: traçabilité limitée.
+Après: logs d’audit Mongo (méthode, path, IP, userId, statut) déclenchés à la fin des réponses.
+Références: server/src/app.js (middleware audit), server/src/models/mongo/AuditLog.js
+Démo: exécuter requêtes → entrées audit visibles en base Mongo.
+
+J) Hashing + Politique mots de passe
+Avant: mots de passe faibles possibles; risque stockage en clair.
+Après: `bcrypt` (hash/compare); politique Zod (longueur, majuscule, chiffre, spécial).
+Références: server/src/controllers/authController.js, server/src/seed.js, server/src/utils/validation.js
+Démo: mot de passe simple rejeté; stockage non réversible.
+
+K) Validations Sequelize (DB)
+Avant: champs non contraints côté DB (ex: `title` vide, email invalide).
+Après: contraintes `len`, `isEmail`, `notEmpty`, `ENUM`.
+Références: server/src/models/User.js, server/src/models/Ad.js, server/src/models/Transaction.js
+Démo: insertion non conforme rejetée par l’ORM.
+
+L) Paiement (tokenisation et données sensibles)
+Avant: risque de stockage du PAN/CVV.
+Après: envoi au PSP (mock), stockage `paymentToken` + 4 derniers chiffres masqués uniquement.
+Références: server/src/controllers/transactionController.js, server/src/models/Transaction.js
+Démo: inspecter en DB: pas de PAN, pas de CVV.
+
+M) Autorisations métier (contrôle d’accès)
+Avant: modifications possibles par des tiers non propriétaires.
+Après: vérification `ad.userId === req.user.userId` pour edit/delete/sold; routes sensibles protégées par `verifyToken`.
+Références: server/src/controllers/adController.js, server/src/routes/*
+Démo: tenter d’éditer l’annonce d’autrui → 403.
+
+Section 5.x (rappel synthétique)
+- 5.1 Communications: HTTPS/TLS + HSTS + Helmet + CORS configuré.
+- 5.2 Auth/Sessions: bcrypt, JWT cookie HttpOnly/secure, expiration 1h, rate-limit, pas de session serveur persistante.
+- 5.3 OWASP: Injection évitée (ORM + Zod), XSS limité (React + headers), contrôle d’accès, bonne config, crypto correcte, gestion dépendances.
+- 5.4 Stockage: secrets via env, Mongo conditionné, aucune donnée sensible en clair (mdp, cartes).

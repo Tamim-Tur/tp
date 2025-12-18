@@ -19,6 +19,9 @@ setupSecurity(app); // Helmet, CORS, Rate Limit
 app.use(express.json());
 app.use(cookieParser());
 app.use('/uploads', express.static('uploads')); // Serve uploaded files
+// NOTE SÉCURITÉ: éviter d'exposer /uploads en statique en prod.
+// Servir via un contrôleur qui ajoute Content-Disposition: attachment
+// et qui vérifie l'autorisation d'accès si nécessaire.
 app.use('/images', express.static(require('path').join(__dirname, '../../images'))); // Serve default images from project root
 // app.use(morgan('dev'));
 
@@ -49,10 +52,18 @@ app.use('/api/messages', require('./routes/messageRoutes'));
 app.use('/api/user', require('./routes/userRoutes'));
 
 // Database sync
+// VULNÉRABILITÉ (démo): alter le schéma en run-time peut casser la prod.
+// Utiliser des migrations (Sequelize-CLI/Umzug) et désactiver en prod.
 sequelize.sync({ alter: true }).then(async () => {
     console.log('Database synced');
-    const seedData = require('./seed');
-    await seedData();
+    // VULNÉRABILITÉ (démo): lancer le seed par défaut crée des comptes connus (ex: admin/mdp faible).
+    // Protéger par une variable d'environnement et ne JAMAIS activer en production.
+    // if (process.env.SEED === 'true' && process.env.NODE_ENV !== 'production') {
+    //   const seedData = require('./seed');
+    //   await seedData();
+    // }
+    const seedData = require('./seed'); // démo active
+    await seedData(); // démo: laissé actif pour montrer la faille
 });
 
 module.exports = app;

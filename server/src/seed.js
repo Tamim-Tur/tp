@@ -41,7 +41,14 @@ const seedData = async () => {
             admin = await User.create({
                 username: 'Admin',
                 email: 'admin@example.com',
-                password: await bcrypt.hash('password123', 10),
+                // VULNÉRABILITÉ (démo): mot de passe admin faible/codé en dur
+                // CORRECTION: utiliser une variable d'environnement et refuser en production si absente
+                // const adminPwd = process.env.ADMIN_PASSWORD;
+                // if (!adminPwd && process.env.NODE_ENV === 'production') {
+                //   throw new Error('ADMIN_PASSWORD manquant en production');
+                // }
+                // password: await bcrypt.hash(adminPwd || 'ChangeMe!123', 10),
+                password: await bcrypt.hash('password123', 10), // démo
                 role: 'admin'
             });
         } else {
