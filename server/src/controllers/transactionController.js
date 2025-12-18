@@ -20,18 +20,22 @@ const mockPaymentGateway = async (cardData, amount) => {
     });
 };
 
+const { z } = require('zod');
+
+// Schema local pour le paiement (puisque l'import externe était désactivé)
+const paymentSchema = z.object({
+    adId: z.string().uuid(),
+    cardNumber: z.string().min(13).max(19),
+    expiryDate: z.string().regex(/^(0[1-9]|1[0-2])\/?([0-9]{2})$/),
+    cvv: z.string().min(3).max(4),
+    cardHolderName: z.string().min(2)
+});
+
 exports.purchaseAd = async (req, res) => {
     const t = await sequelize.transaction(); // SQL Transaction for ACID compliance
 
     try {
-        // VULNÉRABILITÉ CRITIQUE (démo): Aucune validation des données de paiement
-        // Permet:
-        // - Numéros de carte invalides
-        // - Dates d'expiration incorrectes
-        // - CVV invalides
-        // - Fraude facilitée
-
-        // 2. Business Logic Validation
+        // Business Logic Validation
         const ad = await Ad.findByPk(req.body.adId);
         if (!ad) {
             await t.rollback();
@@ -48,12 +52,19 @@ exports.purchaseAd = async (req, res) => {
             return res.status(400).json({ message: 'You cannot buy your own ad' });
         }
 
-        // 3. INSECURE PAYMENT PROCESSING
-        // VULNÉRABILITÉ: Accepte n'importe quelles données de carte
+        // Validate payment data
+        const validatedPayment = paymentSchema.parse({
+            adId: req.body.adId,
+            cardNumber: req.body.cardNumber,
+            expiryDate: req.body.expiryDate,
+            cvv: req.body.cvv,
+            cardHolderName: req.body.cardHolderName
+        });
+
         const paymentResult = await mockPaymentGateway({
-            number: req.body.cardNumber,
-            exp: req.body.expiryDate,
-            cvc: req.body.cvv
+            number: validatedPayment.cardNumber,
+            exp: validatedPayment.expiryDate,
+            cvc: validatedPayment.cvv
         }, ad.price);
 
         // 4. Record Transaction (Storing SAFE data only)

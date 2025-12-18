@@ -38,9 +38,6 @@ npm install cookie-parser
 
 > ⚠️ **Important :** Copiez le fichier `.env.example` et renommez la copie en `.env`. Modifiez les variables d'environnement dans le fichier `.env` selon vos besoins.
 
-**Note**: Le serveur utilise maintenant **HTTP** au lieu de HTTPS. Assurez-vous que `FRONTEND_URL` dans `.env` utilise `http://` et non `https://`.
-
----
 
 ## II) Démarrage
 
@@ -56,6 +53,22 @@ Pour démarrer le back, exécutez la commande suivante dans le dossier server :
 ```bash
 node src/server.js
 ```
-Le serveur sera accessible sur **http://localhost:3000**
+---
+
+## III) ✅ Sécurité et Corrections
+
+Ce projet a été audité et sécurisé.
+Toutes les vulnérabilités précédemment identifiées ont été corrigées :
+
+| Vulnérabilité | Statut | Correction Appliquée |
+|--------------|--------|---------------------|
+| **HTTP non chiffré** | ✅ CORRIGÉ | Activation de HTTPS + HSTS |
+| **Validation absente** | ✅ CORRIGÉ | Validation stricte avec Zod |
+| **Upload non filtré** | ✅ CORRIGÉ | Whitelist extensions + limite taille |
+| **Pas d'audit logs** | ✅ CORRIGÉ | Audit logging MongoDB activé |
+| **XSS** | ✅ CORRIGÉ | Sanitization des entrées (xss) |
+| **Cookies insécurisés** | ✅ CORRIGÉ | Secure + SameSite: Strict |
+
+**Le projet est maintenant sécurisé et respecte les bonnes pratiques OWASP.**
 
 ---

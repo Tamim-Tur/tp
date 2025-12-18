@@ -3,27 +3,41 @@ const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 
 const setupSecurity = (app) => {
-    // Baseline security headers (sans HSTS pour HTTP)
-    app.use(helmet());
+    app.use(helmet({
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: ["'self'"],
+                styleSrc: ["'self'", "'unsafe-inline'"],
+                imgSrc: ["'self'", "data:", "blob:"],
+                connectSrc: ["'self'"],
+                objectSrc: ["'none'"],
+                baseUri: ["'self'"],
+                formAction: ["'self'"],
+                frameAncestors: ["'none'"],
+                upgradeInsecureRequests: [],
+            },
+        },
+        hsts: {
+            maxAge: 31536000,
+            includeSubDomains: true,
+            preload: true
+        },
+        referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+        crossOriginEmbedderPolicy: false
+    }));
 
-    // VULNÉRABILITÉ (démo): Pas de HSTS avec HTTP
-    // Le navigateur ne forcera pas HTTPS
-    // app.use(helmet.hsts({ ... })); // RETIRÉ
-
-    // CORS Configuration pour HTTP
-    const corsOptions = {
-        origin: process.env.FRONTEND_URL || 'http://localhost:5173', // HTTP au lieu de HTTPS
+    // CORS Configuration
+    app.use(cors({
+        origin: process.env.FRONTEND_URL || 'http://localhost:5173',
         credentials: true,
         optionsSuccessStatus: 200,
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
         allowedHeaders: ['Content-Type', 'Authorization']
-    };
-    app.use(cors(corsOptions));
+    }));
 
-    // VULNÉRABILITÉ (démo): CORS permissif avec credentials
-    // Combiné avec HTTP, facilite les attaques CSRF et interception
 
-    // Rate Limiting to prevent Brute Force
+    // Rate Limiting
     const limiter = rateLimit({
         windowMs: 15 * 60 * 1000, // 15 minutes
         max: 100,
@@ -32,8 +46,6 @@ const setupSecurity = (app) => {
         legacyHeaders: false,
     });
     app.use(limiter);
-
-    // NOTE: Rate limiting seul n'est pas suffisant contre les attaques sophistiquées
 };
 
 module.exports = setupSecurity;

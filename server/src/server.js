@@ -1,15 +1,46 @@
-// VULNÉRABILITÉ (démo): Serveur HTTP au lieu de HTTPS
-// Les données transitent en clair sur le réseau (pas de chiffrement TLS)
-// Un attaquant peut intercepter les mots de passe, tokens, données sensibles
-const http = require('http');
+const https = require('https');
+const fs = require('fs');
+const path = require('path');
 const app = require('./app');
 require('dotenv').config();
 
 const PORT = process.env.PORT || 3000;
 
-const server = http.createServer(app);
+// HTTPS Configuration with auto-generated self-signed certificates for development
+const { execSync } = require('child_process');
+const certsDir = path.join(__dirname, '../certs');
 
-server.listen(PORT, () => {
-    console.log(`⚠️  UNSECURE Server running on http://localhost:${PORT}`);
-    console.log('WARNING: No SSL/TLS encryption - data transmitted in plain text!');
-});
+if (!fs.existsSync(certsDir)) {
+    fs.mkdirSync(certsDir, { recursive: true });
+}
+
+const keyPath = path.join(certsDir, 'server-key.pem');
+const certPath = path.join(certsDir, 'server-cert.pem');
+
+(async () => {
+    try {
+        if (!fs.existsSync(keyPath) || !fs.existsSync(certPath)) {
+            console.log('Generating self-signed SSL certificates...');
+            const selfsigned = require('selfsigned');
+            const attrs = [{ name: 'commonName', value: 'localhost' }];
+            const pems = await selfsigned.generate(attrs, { days: 365 });
+
+            fs.writeFileSync(keyPath, pems.private);
+            fs.writeFileSync(certPath, pems.cert);
+        }
+
+        const options = {
+            key: fs.readFileSync(keyPath),
+            cert: fs.readFileSync(certPath)
+        };
+
+        const server = https.createServer(options, app);
+
+        server.listen(PORT, () => {
+            console.log(`Secure HTTPS Server running on https://localhost:${PORT}`);
+        });
+    } catch (error) {
+        console.error('Failed to start server:', error);
+        process.exit(1);
+    }
+})();

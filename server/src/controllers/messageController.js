@@ -1,6 +1,7 @@
 const { Message, User, Ad } = require('../models');
 const { z } = require('zod');
 const { Op } = require('sequelize');
+const xss = require('xss'); // Sanitization
 
 const messageSchema = z.object({
     adId: z.string().uuid(),
@@ -27,7 +28,7 @@ exports.sendMessage = async (req, res) => {
             senderId: req.user.userId,
             receiverId,
             adId,
-            content
+            content: xss(content) // Sanitized content
         });
 
         console.log('Message created:', message.uuid);

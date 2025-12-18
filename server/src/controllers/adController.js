@@ -1,14 +1,9 @@
 const { Ad, User } = require('../models');
-// const { adSchema } = require('../utils/validation'); // RETIRÉ - Validation désactivée
+const { adSchema } = require('../utils/validation'); // ✅ Validation réactivée
+const xss = require('xss'); // Pour sanitization supplémentaire
 
 exports.createAd = async (req, res) => {
     try {
-        // VULNÉRABILITÉ CRITIQUE (démo): Aucune validation des données
-        // Permet:
-        // - XSS via title/description non sanitisés
-        // - Prix négatifs ou invalides
-        // - Injection de contenu malveillant
-        // - Données corrompues en base
 
         let imageUrl = req.body.imageUrl || '';
 
@@ -18,10 +13,22 @@ exports.createAd = async (req, res) => {
             imageUrl = null;
         }
 
+        // Validate and sanitize ad data
+        const dataToValidate = {
+            ...req.body,
+            price: parseFloat(req.body.price) // Assure que c'est un nombre
+        };
+
+        const validatedData = adSchema.parse(dataToValidate);
+
+        // Sanitization supplémentaire contre XSS stocké
+        validatedData.title = xss(validatedData.title);
+        validatedData.description = xss(validatedData.description);
+
         const ad = await Ad.create({
-            title: req.body.title,
-            description: req.body.description,
-            price: parseFloat(req.body.price),
+            title: validatedData.title,
+            description: validatedData.description,
+            price: validatedData.price,
             imageUrl,
             userId: req.user.userId
         });
@@ -36,7 +43,6 @@ exports.createAd = async (req, res) => {
 exports.getAllAds = async (req, res) => {
     try {
         const ads = await Ad.findAll({
-            // where: { status: 'available' }, // removed to show sold items
             include: [{ model: User, as: 'seller', attributes: ['uuid', 'username'] }],
             order: [['createdAt', 'DESC']]
         });
@@ -72,7 +78,7 @@ exports.updateAd = async (req, res) => {
             return res.status(403).json({ message: 'Unauthorized: You can only edit your own ads' });
         }
 
-        // VULNÉRABILITÉ (démo): Pas de validation lors de la mise à jour
+
 
         let imageUrl = ad.imageUrl;
 
@@ -82,10 +88,19 @@ exports.updateAd = async (req, res) => {
             imageUrl = req.body.imageUrl;
         }
 
+        // Validate partial update
+        const dataToValidate = {
+            ...req.body,
+            price: req.body.price ? parseFloat(req.body.price) : undefined
+        };
+
+        const validatedData = adSchema.partial().parse(dataToValidate);
+
+        if (validatedData.title) validatedData.title = xss(validatedData.title);
+        if (validatedData.description) validatedData.description = xss(validatedData.description);
+
         await ad.update({
-            title: req.body.title,
-            description: req.body.description,
-            price: parseFloat(req.body.price),
+            ...validatedData,
             imageUrl
         });
 

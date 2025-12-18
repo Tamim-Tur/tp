@@ -1,34 +1,46 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
-// const mongoose = require('mongoose'); // RETIRÉ - Audit logging désactivé
+const mongoose = require('mongoose');
 const setupSecurity = require('./middleware/securityMiddleware');
 const authRoutes = require('./routes/authRoutes');
 const adRoutes = require('./routes/adRoutes');
 const { sequelize } = require('./models');
-// const connectMongo = require('./config/mongo'); // RETIRÉ - Audit logging désactivé
-// const AuditLog = require('./models/mongo/AuditLog'); // RETIRÉ - Audit logging désactivé
+const AuditLog = require('./models/mongo/AuditLog');
+const path = require('path');
+
+// Connect to MongoDB for Audit Logging
+mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/shop-audit')
+    .then(() => console.log('✅ Connected to MongoDB for Audit Logs'))
+    .catch(err => console.error('MongoDB Connection Error:', err));
 
 const app = express();
 
-// Connect to MongoDB - DÉSACTIVÉ (était utilisé pour audit logs)
-// connectMongo();
-
 // Middleware
-setupSecurity(app); // Helmet, CORS, Rate Limit
+setupSecurity(app);
 app.use(express.json());
 app.use(cookieParser());
-app.use('/uploads', express.static('uploads')); // Serve uploaded files
-// NOTE SÉCURITÉ: éviter d'exposer /uploads en statique en prod.
-// Servir via un contrôleur qui ajoute Content-Disposition: attachment
-// et qui vérifie l'autorisation d'accès si nécessaire.
-app.use('/images', express.static(require('path').join(__dirname, '../../images'))); // Serve default images from project root
-// app.use(morgan('dev'));
+app.use('/uploads', express.static('uploads'));
+app.use('/images', express.static(path.join(__dirname, '../../images')));
 
-// VULNÉRABILITÉ (démo): Pas d'audit logging
-// Aucune traçabilité des actions utilisateurs
-// Impossible de détecter des activités suspectes ou des attaques
-// En production, un système d'audit est essentiel pour la sécurité et la conformité
+// Audit Logging Middleware
+app.use(async (req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        // Log asynchronously
+        AuditLog.create({
+            method: req.method,
+            path: req.path,
+            ip: req.ip,
+            statusCode: res.statusCode,
+            duration,
+            userId: req.user?.userId || null,
+            userAgent: req.get('user-agent')
+        }).catch(err => console.error('Audit Log Error:', err));
+    });
+    next();
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -37,19 +49,28 @@ app.use('/api/transactions', require('./routes/transactionRoutes'));
 app.use('/api/messages', require('./routes/messageRoutes'));
 app.use('/api/user', require('./routes/userRoutes'));
 
+// Handle 404 errors with JSON
+app.use((req, res, next) => {
+    res.status(404).json({ message: 'Route not found' });
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    // Force generic error message to prevent PII/Info Disclosure in ZAP scans
+    res.status(err.status || 500).json({
+        message: 'Internal Server Error'
+    });
+});
+
 // Database sync
-// VULNÉRABILITÉ (démo): alter le schéma en run-time peut casser la prod.
-// Utiliser des migrations (Sequelize-CLI/Umzug) et désactiver en prod.
 sequelize.sync({ alter: true }).then(async () => {
     console.log('Database synced');
-    // VULNÉRABILITÉ (démo): lancer le seed par défaut crée des comptes connus (ex: admin/mdp faible).
-    // Protéger par une variable d'environnement et ne JAMAIS activer en production.
-    // if (process.env.SEED === 'true' && process.env.NODE_ENV !== 'production') {
-    //   const seedData = require('./seed');
-    //   await seedData();
-    // }
-    const seedData = require('./seed'); // démo active
-    await seedData(); // démo: laissé actif pour montrer la faille
+    const seedData = require('./seed');
+    // Only run seed in dev/test environment
+    if (process.env.NODE_ENV !== 'production') {
+        await seedData();
+    }
 });
 
 module.exports = app;

@@ -7,13 +7,16 @@ const seedData = async () => {
         await sequelize.sync({ alter: true });
 
         // Check/Create Alice
-        let alice = await User.findOne({ where: { email: 'alice@example.com' } });
+        const aliceEmail = process.env.SEED_USER_ALICE_EMAIL;
+        const alicePassword = process.env.SEED_USER_ALICE_PASSWORD;
+
+        let alice = await User.findOne({ where: { email: aliceEmail } });
         if (!alice) {
             console.log('Creating Alice...');
             alice = await User.create({
                 username: 'Alice',
-                email: 'alice@example.com',
-                password: await bcrypt.hash('password123', 10),
+                email: aliceEmail,
+                password: await bcrypt.hash(alicePassword, 10),
                 role: 'user'
             });
         } else {
@@ -21,13 +24,16 @@ const seedData = async () => {
         }
 
         // Check/Create Bob
-        let bob = await User.findOne({ where: { email: 'bob@example.com' } });
+        const bobEmail = process.env.SEED_USER_BOB_EMAIL;
+        const bobPassword = process.env.SEED_USER_BOB_PASSWORD;
+
+        let bob = await User.findOne({ where: { email: bobEmail } });
         if (!bob) {
             console.log('Creating Bob...');
             bob = await User.create({
                 username: 'Bob',
-                email: 'bob@example.com',
-                password: await bcrypt.hash('password123', 10),
+                email: bobEmail,
+                password: await bcrypt.hash(bobPassword, 10),
                 role: 'user'
             });
         } else {
@@ -35,27 +41,23 @@ const seedData = async () => {
         }
 
         // Check/Create Admin
-        let admin = await User.findOne({ where: { email: 'admin@example.com' } });
+        const adminEmail = process.env.SEED_ADMIN_EMAIL;
+        const adminPassword = process.env.SEED_ADMIN_PASSWORD;
+
+        let admin = await User.findOne({ where: { email: adminEmail } });
         if (!admin) {
             console.log('Creating Admin...');
             admin = await User.create({
                 username: 'Admin',
-                email: 'admin@example.com',
-                // VULNÉRABILITÉ (démo): mot de passe admin faible/codé en dur
-                // CORRECTION: utiliser une variable d'environnement et refuser en production si absente
-                // const adminPwd = process.env.ADMIN_PASSWORD;
-                // if (!adminPwd && process.env.NODE_ENV === 'production') {
-                //   throw new Error('ADMIN_PASSWORD manquant en production');
-                // }
-                // password: await bcrypt.hash(adminPwd || 'ChangeMe!123', 10),
-                password: await bcrypt.hash('password123', 10), // démo
+                email: adminEmail,
+                password: await bcrypt.hash(adminPassword, 10),
                 role: 'admin'
             });
         } else {
             console.log('Admin already exists.');
         }
 
-        // DELETE ONLY Alice and Bob's ads (default ads), keep user-created ads AND sold ads
+
         console.log('Deleting default ads (Alice & Bob only)...');
         const { Op } = require('sequelize'); // Make sure to import Op
         await Ad.destroy({
@@ -109,9 +111,9 @@ const seedData = async () => {
             }
         ]);
 
-        console.log('✅ Database seeded successfully with 5 default ads! (User ads preserved)');
+        console.log(' Database seeded successfully with 5 default ads! (User ads preserved)');
     } catch (error) {
-        console.error('❌ Error seeding database:', error);
+        console.error(' Error seeding database:', error);
     }
 };
 
