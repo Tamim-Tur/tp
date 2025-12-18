@@ -1,25 +1,15 @@
-const https = require('https');
-const fs = require('fs');
-const path = require('path');
+// VULNÉRABILITÉ (démo): Serveur HTTP au lieu de HTTPS
+// Les données transitent en clair sur le réseau (pas de chiffrement TLS)
+// Un attaquant peut intercepter les mots de passe, tokens, données sensibles
+const http = require('http');
 const app = require('./app');
-const generateCertificates = require('./utils/certGenerator');
 require('dotenv').config();
 
 const PORT = process.env.PORT || 3000;
 
-// Generate or load certificates
-const startServer = async () => {
-    try {
-        const { key, cert } = await generateCertificates();
-        const server = https.createServer({ key, cert }, app);
+const server = http.createServer(app);
 
-        server.listen(PORT, () => {
-            console.log(`Secure Server running on https://localhost:${PORT}`);
-        });
-    } catch (err) {
-        console.error('Failed to start server:', err);
-        process.exit(1);
-    }
-};
-
-startServer();
+server.listen(PORT, () => {
+    console.log(`⚠️  UNSECURE Server running on http://localhost:${PORT}`);
+    console.log('WARNING: No SSL/TLS encryption - data transmitted in plain text!');
+});

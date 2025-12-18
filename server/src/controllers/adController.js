@@ -1,38 +1,33 @@
 const { Ad, User } = require('../models');
-const { adSchema } = require('../utils/validation');
+// const { adSchema } = require('../utils/validation'); // RETIRÉ - Validation désactivée
 
 exports.createAd = async (req, res) => {
     try {
-        // Parse price to number since FormData sends everything as strings
-        const dataToValidate = {
-            ...req.body,
-            price: parseFloat(req.body.price)
-        };
+        // VULNÉRABILITÉ CRITIQUE (démo): Aucune validation des données
+        // Permet:
+        // - XSS via title/description non sanitisés
+        // - Prix négatifs ou invalides
+        // - Injection de contenu malveillant
+        // - Données corrompues en base
 
-        const validatedData = adSchema.parse(dataToValidate);
-
-        // Handle image: either from file upload or URL
-        let imageUrl = validatedData.imageUrl || '';
+        let imageUrl = req.body.imageUrl || '';
 
         if (req.file) {
-            // If file was uploaded, use the file path
             imageUrl = `/uploads/${req.file.filename}`;
         } else if (imageUrl === '') {
-            // Convert empty string to null to avoid Sequelize validation error
             imageUrl = null;
         }
 
         const ad = await Ad.create({
-            ...validatedData,
+            title: req.body.title,
+            description: req.body.description,
+            price: parseFloat(req.body.price),
             imageUrl,
             userId: req.user.userId
         });
 
         res.status(201).json(ad);
     } catch (error) {
-        if (error.issues) {
-            return res.status(400).json({ errors: error.issues });
-        }
         console.error('Error creating ad:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
@@ -77,33 +72,25 @@ exports.updateAd = async (req, res) => {
             return res.status(403).json({ message: 'Unauthorized: You can only edit your own ads' });
         }
 
-        // Parse and validate data
-        const dataToValidate = {
-            ...req.body,
-            price: parseFloat(req.body.price)
-        };
+        // VULNÉRABILITÉ (démo): Pas de validation lors de la mise à jour
 
-        const validatedData = adSchema.parse(dataToValidate);
-
-        // Handle image update
-        let imageUrl = ad.imageUrl; // Keep existing image by default
+        let imageUrl = ad.imageUrl;
 
         if (req.file) {
             imageUrl = `/uploads/${req.file.filename}`;
-        } else if (validatedData.imageUrl) {
-            imageUrl = validatedData.imageUrl;
+        } else if (req.body.imageUrl) {
+            imageUrl = req.body.imageUrl;
         }
 
         await ad.update({
-            ...validatedData,
+            title: req.body.title,
+            description: req.body.description,
+            price: parseFloat(req.body.price),
             imageUrl
         });
 
         res.json(ad);
     } catch (error) {
-        if (error.issues) {
-            return res.status(400).json({ errors: error.issues });
-        }
         console.error('Error updating ad:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }

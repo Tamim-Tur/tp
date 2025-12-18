@@ -3,27 +3,16 @@ const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 
 const setupSecurity = (app) => {
-    // Baseline security headers
+    // Baseline security headers (sans HSTS pour HTTP)
     app.use(helmet());
-    app.use(helmet.hsts({
-        maxAge: 15552000, // 180 days in seconds
-        includeSubDomains: true,
-        preload: true
-    }));
 
-    // RENFORCEMENT RECOMMANDÉ (commenté): ajouter une CSP stricte adaptée au front
-    // app.use(helmet.contentSecurityPolicy({
-    //     useDefaults: true,
-    //     directives: {
-    //         "default-src": ["'self'"],
-    //         "img-src": ["'self'", "data:", process.env.FRONTEND_URL || 'https://localhost:5173'],
-    //         "connect-src": ["'self'", process.env.FRONTEND_URL || 'https://localhost:5173'],
-    //     },
-    // }));
+    // VULNÉRABILITÉ (démo): Pas de HSTS avec HTTP
+    // Le navigateur ne forcera pas HTTPS
+    // app.use(helmet.hsts({ ... })); // RETIRÉ
 
-    // CORS Configuration
+    // CORS Configuration pour HTTP
     const corsOptions = {
-        origin: process.env.FRONTEND_URL || 'https://localhost:5173',
+        origin: process.env.FRONTEND_URL || 'http://localhost:5173', // HTTP au lieu de HTTPS
         credentials: true,
         optionsSuccessStatus: 200,
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
@@ -31,9 +20,8 @@ const setupSecurity = (app) => {
     };
     app.use(cors(corsOptions));
 
-    // VIGILANCE: si FRONTEND_URL est mal configurée (ou trop permissive),
-    // combiner credentials: true et SameSite=None peut exposer les cookies aux sites tiers.
-    // Utiliser une whitelist stricte d'origines en prod.
+    // VULNÉRABILITÉ (démo): CORS permissif avec credentials
+    // Combiné avec HTTP, facilite les attaques CSRF et interception
 
     // Rate Limiting to prevent Brute Force
     const limiter = rateLimit({
@@ -45,13 +33,7 @@ const setupSecurity = (app) => {
     });
     app.use(limiter);
 
-    // LIMITER SPÉCIFIQUE LOGIN (exemple commenté): à appliquer seulement sur /api/auth/login
-    // const loginLimiter = rateLimit({
-    //   windowMs: 10 * 60 * 1000,
-    //   max: 5,
-    //   message: 'Too many login attempts, please try again later.'
-    // });
-    // Exporter/attacher loginLimiter puis l'utiliser dans authRoutes sur POST /login
+    // NOTE: Rate limiting seul n'est pas suffisant contre les attaques sophistiquées
 };
 
 module.exports = setupSecurity;

@@ -1,5 +1,5 @@
 const { Transaction, Ad, User, sequelize } = require('../models');
-const { paymentSchema } = require('../utils/validation');
+// const { paymentSchema } = require('../utils/validation'); // RETIRÉ - Validation désactivée
 
 // MOCK Payment Gateway (Simulating Stripe/PayPal)
 // In a real app, this would use an SDK like `stripe.paymentIntents.create`
@@ -24,11 +24,15 @@ exports.purchaseAd = async (req, res) => {
     const t = await sequelize.transaction(); // SQL Transaction for ACID compliance
 
     try {
-        // 1. Input Validation
-        const validatedData = paymentSchema.parse(req.body);
+        // VULNÉRABILITÉ CRITIQUE (démo): Aucune validation des données de paiement
+        // Permet:
+        // - Numéros de carte invalides
+        // - Dates d'expiration incorrectes
+        // - CVV invalides
+        // - Fraude facilitée
 
         // 2. Business Logic Validation
-        const ad = await Ad.findByPk(validatedData.adId);
+        const ad = await Ad.findByPk(req.body.adId);
         if (!ad) {
             await t.rollback();
             return res.status(404).json({ message: 'Ad not found' });
@@ -44,12 +48,12 @@ exports.purchaseAd = async (req, res) => {
             return res.status(400).json({ message: 'You cannot buy your own ad' });
         }
 
-        // 3. SECURE PAYMENT PROCESSING
-        // We NEVER store the raw card number. We send it to the gateway and get a token.
+        // 3. INSECURE PAYMENT PROCESSING
+        // VULNÉRABILITÉ: Accepte n'importe quelles données de carte
         const paymentResult = await mockPaymentGateway({
-            number: validatedData.cardNumber,
-            exp: validatedData.expiryDate,
-            cvc: validatedData.cvv
+            number: req.body.cardNumber,
+            exp: req.body.expiryDate,
+            cvc: req.body.cvv
         }, ad.price);
 
         // 4. Record Transaction (Storing SAFE data only)
@@ -61,7 +65,7 @@ exports.purchaseAd = async (req, res) => {
             adId: ad.uuid,
             paymentToken: paymentResult.id,
             // SECURITY: Store only the last 4 digits for reference
-            maskedCardNumber: `**** **** **** ${validatedData.cardNumber.slice(-4)}`
+            maskedCardNumber: `**** **** **** ${req.body.cardNumber?.slice(-4) || '****'}`
         }, { transaction: t });
 
         // 5. Update Ad Status
@@ -78,10 +82,6 @@ exports.purchaseAd = async (req, res) => {
 
     } catch (error) {
         await t.rollback();
-
-        if (error.issues) {
-            return res.status(400).json({ errors: error.issues });
-        }
         res.status(400).json({ message: 'Payment failed', error: error.message });
     }
 };
